@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     # Security
     secret_key: str = "your-secret-key-change-this"
     
+    # Database
+    database_url: str = "postgresql://postgres:postgres@localhost:5432/lti_platform"
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=False
