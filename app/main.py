@@ -1,13 +1,23 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from app.core.config import settings
-from app.db.session import get_db, engine
+from app.db.session import get_db, engine, Base
+from app.api import platforms
+
+# Import models
+from app.models.platform import Platform
+
+# Create tables
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
     debug=settings.debug
 )
+
+# Register routers
+app.include_router(platforms.router)
 
 @app.get("/")
 def read_root():
@@ -24,7 +34,6 @@ def health_check():
 def test_database(db: Session = Depends(get_db)):
     """Test database connection"""
     try:
-        # Execute raw SQL to test connection
         db.execute("SELECT 1")
         return {"database": "connected"}
     except Exception as e:
