@@ -1,30 +1,12 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
+from app.db.base import Base
 
-# Create database engine
-engine = create_engine(
-    settings.database_url,
-    echo=settings.debug,  # Log SQL queries in debug mode
-)
+engine = create_engine(settings.database_url)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Session factory
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
-)
-
-# Base class for models
-Base = declarative_base()
-
-
-# Dependency for FastAPI endpoints
 def get_db():
-    """
-    Database session dependency.
-    Yields a database session and closes it after use.
-    """
     db = SessionLocal()
     try:
         yield db

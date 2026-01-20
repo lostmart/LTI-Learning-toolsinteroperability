@@ -1,28 +1,23 @@
 from pydantic import BaseModel, HttpUrl
 from datetime import datetime
+from typing import Optional
 
-
-class PlatformCreate(BaseModel):
-    """Schema for creating a Platform"""
-    issuer: str
+class PlatformBase(BaseModel):
+    name: str
     client_id: str
-    auth_endpoint: str
-    token_endpoint: str
-    jwks_endpoint: str
-    name: str | None = None
+    auth_login_url: HttpUrl
+    auth_token_url: HttpUrl
+    key_set_url: HttpUrl
+    deployment_id: Optional[str] = None
 
+class PlatformCreate(PlatformBase):
+    id: str  # issuer URL
 
-class PlatformResponse(BaseModel):
-    """Schema for Platform response"""
-    id: int
-    issuer: str
-    client_id: str
-    auth_endpoint: str
-    token_endpoint: str
-    jwks_endpoint: str
-    name: str | None
-    is_active: bool
+class PlatformResponse(PlatformBase):
+    id: str
+    active: bool
     created_at: datetime
+    updated_at: Optional[datetime]
     
     class Config:
-        from_attributes = True  # Allows converting SQLAlchemy model to Pydantic
+        from_attributes = True  # SQLAlchemy compatibility

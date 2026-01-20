@@ -1,30 +1,25 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
+from sqlalchemy import Column, String, DateTime, Boolean
 from sqlalchemy.sql import func
-from app.models import Base
-
+from app.db.base import Base
 
 class Platform(Base):
-    """LMS Platform registration (Moodle, Canvas, etc.)"""
-    
     __tablename__ = "platforms"
     
-    id = Column(Integer, primary_key=True, index=True)
-    
-    # LTI identifiers
-    issuer = Column(String(500), unique=True, nullable=False, index=True)
-    client_id = Column(String(255), nullable=False)
+    id = Column(String, primary_key=True)  # issuer URL
+    name = Column(String, nullable=False)
+    client_id = Column(String, nullable=False)
     
     # OAuth/OIDC endpoints
-    auth_endpoint = Column(String(500), nullable=False)
-    token_endpoint = Column(String(500), nullable=False)
-    jwks_endpoint = Column(String(500), nullable=False)
+    auth_login_url = Column(String, nullable=False)
+    auth_token_url = Column(String, nullable=False)
     
-    # Platform info
-    name = Column(String(255), nullable=True)
+    # Public keys
+    key_set_url = Column(String, nullable=False)
     
-    # Status
-    is_active = Column(Boolean, default=True)
+    # Optional
+    deployment_id = Column(String, nullable=True)
     
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    # Metadata
+    active = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
