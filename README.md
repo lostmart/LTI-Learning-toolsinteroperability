@@ -1,6 +1,20 @@
+## Start up
+
+Start Postgress Docker container:
+
+```bash
+docker-compose up -d
+```
+
+Start FastAPI server:
+
+```bash
+uvicorn main:app --reload
+```
+
 ## fOLDER
 
-```
+```text
 ├── app/
 │   ├── __init__.py
 │   ├── main.py                 # FastAPI application entry point
