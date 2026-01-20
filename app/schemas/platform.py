@@ -17,7 +17,7 @@ class PlatformResponse(PlatformBase):
     id: str
     active: bool
     created_at: datetime
-    updated_at: Optional[datetime]
+    updated_at: Optional[datetime] = None
     
     class Config:
-        from_attributes = True  # SQLAlchemy compatibility
+        from_attributes = True

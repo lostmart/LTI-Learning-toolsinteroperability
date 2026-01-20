@@ -6,12 +6,11 @@ from app.api import platforms
 from app.api.lti import launch
 from sqlalchemy.sql import text
 
-# Import models
+# Import models BEFORE creating tables
 from app.models.platform import Platform
 from app.models.user import User
 
-
-# Create tables
+# NOW create tables (models are registered with Base)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
