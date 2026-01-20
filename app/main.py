@@ -5,6 +5,7 @@ from app.db.session import get_db, engine, Base
 from app.api import platforms
 from app.api.lti import launch
 from sqlalchemy.sql import text
+from app.api import platforms, jwks 
 
 # Import models BEFORE creating tables
 from app.models.platform import Platform
@@ -22,6 +23,7 @@ app = FastAPI(
 # Register routers
 app.include_router(platforms.router)
 app.include_router(launch.router)
+app.include_router(jwks.router)
 
 @app.get("/")
 def read_root():

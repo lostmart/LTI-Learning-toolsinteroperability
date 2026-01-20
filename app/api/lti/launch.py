@@ -1,53 +1,77 @@
-from fastapi import APIRouter, Request, Depends, HTTPException, Form
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
+from urllib.parse import urlencode
+
 from app.db.session import get_db
+from app.schemas.lti import LtiLoginRequest
+from app.services import lti_service
 
-router = APIRouter(prefix="/lti", tags=["lti"])
-
+router = APIRouter(prefix="/lti", tags=["LTI"])
 
 @router.get("/login")
-async def oidc_login(
-    iss: str,
-    login_hint: str,
-    target_link_uri: str,
-    lti_message_hint: str | None = None,
-):
-    """
-    OIDC Login Initiation - Step 1 of LTI launch
-    Platform sends user here first
-    """
-    
-    # TODO: Validate issuer is a registered platform
-    # TODO: Generate state and nonce
-    # TODO: Redirect to platform's auth endpoint
-    
-    return {
-        "message": "OIDC Login Initiation",
-        "issuer": iss,
-        "login_hint": login_hint,
-        "target_link_uri": target_link_uri
-    }
-
-
-@router.post("/launch")
-async def lti_launch(
-    id_token: str = Form(...),
-    state: str = Form(...),
+def lti_login(
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """
-    LTI Launch - Step 2 
-    Platform redirects user here with id_token (JWT)
+    OIDC Login Initiation - First step of LTI 1.3 launch
+    
+    LMS redirects student here to initiate authentication
     """
+    # Parse query parameters
+    params = dict(request.query_params)
     
-    # TODO: Validate JWT signature
-    # TODO: Extract user and context from JWT
-    # TODO: Create/update user in database
-    # TODO: Create session
-    # TODO: Redirect to application
+    # Validate required parameters
+    if "iss" not in params or "login_hint" not in params:
+        raise HTTPException(400, "Missing required parameters: iss, login_hint")
     
-    return {
-        "message": "LTI Launch received",
-        "id_token_length": len(id_token),
-        "state": state
+    issuer = params["iss"]
+    login_hint = params["login_hint"]
+    target_link_uri = params.get("target_link_uri", f"{request.base_url}lti/launch")
+    client_id = params.get("client_id")
+    lti_message_hint = params.get("lti_message_hint")
+    
+    # Get platform configuration
+    platform = lti_service.get_platform_by_issuer(db, issuer)
+    if not platform:
+        raise HTTPException(400, f"Unknown platform: {issuer}")
+    
+    # Use client_id from request or platform config
+    if not client_id:
+        client_id = platform.client_id
+    
+    # Generate security tokens
+    state = lti_service.generate_state()
+    nonce = lti_service.generate_nonce()
+    
+    # Store state with context
+    lti_service.store_state(state, {
+        "issuer": issuer,
+        "target_link_uri": target_link_uri,
+        "client_id": client_id
+    })
+    
+    # Store nonce for validation later
+    lti_service.store_nonce(nonce)
+    
+    # Build OIDC authorization request
+    auth_params = {
+        "response_type": "id_token",
+        "response_mode": "form_post",
+        "scope": "openid",
+        "client_id": client_id,
+        "redirect_uri": target_link_uri,
+        "login_hint": login_hint,
+        "state": state,
+        "nonce": nonce,
+        "prompt": "none"
     }
+    
+    if lti_message_hint:
+        auth_params["lti_message_hint"] = lti_message_hint
+    
+    # Redirect to LMS authorization endpoint
+    auth_url = f"{platform.auth_login_url}?{urlencode(auth_params)}"
+    
+    return RedirectResponse(url=auth_url, status_code=302)

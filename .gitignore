@@ -67,3 +67,11 @@ public_key.pem
 
 # Docker
 docker-compose.override.yml
+
+
+
+keys/
+*.pem
+*.key
+private_key.pem
+public_key.pem
