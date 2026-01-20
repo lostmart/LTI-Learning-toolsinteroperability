@@ -4,6 +4,7 @@ from app.core.config import settings
 from app.db.session import get_db, engine, Base
 from app.api import platforms
 from app.api.lti import launch
+from sqlalchemy.sql import text
 
 # Import models
 from app.models.platform import Platform
@@ -38,7 +39,7 @@ def health_check():
 def test_database(db: Session = Depends(get_db)):
     """Test database connection"""
     try:
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         return {"database": "connected"}
     except Exception as e:
         return {"database": "error", "message": str(e)}
