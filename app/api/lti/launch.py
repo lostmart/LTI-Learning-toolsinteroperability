@@ -163,14 +163,14 @@ def lti_launch(
     unverified_payload = jose_jwt.get_unverified_claims(id_token)
     token_nonce = unverified_payload.get("nonce")
     
-    if not lti_service.validate_nonce(token_nonce):
+    if not lti_service.validate_nonce(token_nonce): # type: ignore
         raise HTTPException(400, "Invalid or expired nonce")
     
     try:
         payload = lti_service.validate_jwt_token(
             id_token,
             platform,
-            expected_nonce=token_nonce,
+            expected_nonce=token_nonce, # type: ignore
             expected_client_id=client_id
         )
     except ValueError as e:
@@ -197,9 +197,9 @@ def lti_launch(
         )
         db.add(user)
     else:
-        user.email = email
-        user.name = name
-        user.last_launch_at = datetime.utcnow()
+        user.email = email # type: ignore
+        user.name = name # type: ignore
+        user.last_launch_at = datetime.utcnow() # type: ignore
     
     db.commit()
     db.refresh(user)
