@@ -1,12 +1,36 @@
 ## Start up
 
-Start Postgress Docker container:
+- Start Postgress Docker container:
 
 ```bash
 docker-compose up -d
 ```
 
-Start FastAPI server:
+- Start Python environment
+
+```bash
+.venv\Scripts\Activate.ps1
+```
+
+or
+
+```bash
+.venv\Scripts\activate.bat
+```
+
+or (for Gitbash)
+
+```bash
+source .venv/Scripts/activate
+```
+
+- Intsall all dependencies on you Python env
+
+```bash
+pip install -e .
+```
+
+- Start FastAPI server:
 
 ```bash
 uvicorn main:app --reload

@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+	<head>
+		<title>LTI 1.3 Launch Tester</title>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				max-width: 800px;
+				margin: 50px auto;
+				padding: 20px;
+			}
+			button {
+				background: #0066cc;
+				color: white;
+				padding: 10px 20px;
+				border: none;
+				border-radius: 4px;
+				cursor: pointer;
+				font-size: 16px;
+			}
+			button:hover {
+				background: #0052a3;
+			}
+			.info {
+				background: #f0f0f0;
+				padding: 15px;
+				border-radius: 4px;
+				margin: 20px 0;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>LTI 1.3 Launch Tester</h1>
+
+		<div class="info">
+			<p>
+				<strong>This page simulates an LMS launching your LTI tool.</strong>
+			</p>
+			<p>Click the button below to initiate an LTI login flow.</p>
+		</div>
+
+		<button onclick="initiateLtiLogin()">Launch LTI Tool</button>
+
+		<script>
+			function initiateLtiLogin() {
+				const params = new URLSearchParams({
+					iss: "https://moodle.example.edu",
+					login_hint: "test_user_12345",
+					target_link_uri: "http://localhost:8000/lti/launch",
+					lti_message_hint: "test_message",
+					client_id: "test_client_123",
+				})
+
+				window.location.href = `http://localhost:8000/lti/login?${params.toString()}`
+			}
+		</script>
+	</body>
+</html>
