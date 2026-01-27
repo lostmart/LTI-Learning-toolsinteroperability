@@ -1,39 +1,74 @@
-## Start up
+## Setup
 
-- Start Postgress Docker container:
+
+### 2. Create and activate Python virtual environment
+
+**Linux/Mac:**
 
 ```bash
-docker-compose up -d
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
-- Start Python environment
+**Windows PowerShell:**
 
 ```bash
+python -m venv .venv
 .venv\Scripts\Activate.ps1
 ```
 
-or
+**Windows Command Prompt:**
 
 ```bash
+python -m venv .venv
 .venv\Scripts\activate.bat
 ```
 
-or (for Gitbash)
+**Git Bash (Windows):**
 
 ```bash
+python -m venv .venv
 source .venv/Scripts/activate
 ```
 
-- Intsall all dependencies on you Python env
+### 3. Install dependencies
 
 ```bash
-pip install -e .
+pip install fastapi uvicorn[standard] pydantic-settings sqlalchemy psycopg2-binary python-jose[cryptography] cryptography PyJWT requests httpx
 ```
 
-- Start FastAPI server:
+### 4. Start FastAPI server
 
 ```bash
-uvicorn main:app --reload
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+## Important Notes
+
+- Always use `.venv` (with the dot) for consistency
+- Add both `venv/` and `.venv/` to `.gitignore`
+
+## WINDOWS USERS
+
+**Windows PowerShell:**
+
+```bash
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+**Windows Command Prompt:**
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate.bat
+```
+
+**Git Bash (Windows):**
+
+```bash
+python -m venv .venv
+source .venv/Scripts/activate
 ```
 
 ## fOLDER

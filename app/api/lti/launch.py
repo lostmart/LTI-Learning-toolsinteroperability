@@ -12,6 +12,7 @@ from app.schemas.lti import LtiLoginRequest
 from app.services import lti_service
 from app.models.user import User
 from app.core.security import load_private_key
+from app.models.platform import Platform
 
 router = APIRouter(prefix="/lti", tags=["LTI"])
 
@@ -32,7 +33,10 @@ def lti_login(
     client_id = params.get("client_id")
     lti_message_hint = params.get("lti_message_hint")
     
-    platform = lti_service.get_platform_by_issuer(db, issuer)
+    platform = db.query(Platform).filter(
+    Platform.client_id == client_id,
+    Platform.active == True
+).first()
     if not platform:
         raise HTTPException(400, f"Unknown platform: {issuer}")
     
@@ -66,6 +70,7 @@ def lti_login(
         auth_params["lti_message_hint"] = lti_message_hint
     
     auth_url = f"{platform.auth_login_url}?{urlencode(auth_params)}"
+    
     
     return RedirectResponse(url=auth_url, status_code=302)
 
@@ -156,26 +161,38 @@ def lti_launch(
     issuer = state_data["issuer"]
     client_id = state_data["client_id"]
     
-    platform = lti_service.get_platform_by_issuer(db, issuer)
+    platform = db.query(Platform).filter(
+        Platform.client_id == client_id,
+        Platform.active == True
+    ).first()
+    
     if not platform:
         raise HTTPException(400, f"Unknown platform: {issuer}")
     
     unverified_payload = jose_jwt.get_unverified_claims(id_token)
     token_nonce = unverified_payload.get("nonce")
     
-    if not lti_service.validate_nonce(token_nonce): # type: ignore
+    if not lti_service.validate_nonce(token_nonce):
         raise HTTPException(400, "Invalid or expired nonce")
     
     try:
         payload = lti_service.validate_jwt_token(
             id_token,
             platform,
-            expected_nonce=token_nonce, # type: ignore
+            expected_nonce=token_nonce,
             expected_client_id=client_id
         )
+        
+        # Log the payload
+        print("=" * 50)
+        print("JWT PAYLOAD:")
+        print(json.dumps(payload, indent=2))
+        print("=" * 50)
+        
     except ValueError as e:
         raise HTTPException(400, f"Token validation failed: {str(e)}")
     
+    # Extract user info from payload
     lti_user_id = payload.get("sub")
     email = payload.get("email")
     name = payload.get("name")
@@ -183,6 +200,7 @@ def lti_launch(
     if not lti_user_id:
         raise HTTPException(400, "Token missing 'sub' claim")
     
+    # Create or update user
     user = db.query(User).filter(
         User.platform_id == platform.id,
         User.lti_user_id == lti_user_id
@@ -197,9 +215,9 @@ def lti_launch(
         )
         db.add(user)
     else:
-        user.email = email # type: ignore
-        user.name = name # type: ignore
-        user.last_launch_at = datetime.utcnow() # type: ignore
+        user.email = email
+        user.name = name
+        user.last_launch_at = datetime.utcnow()
     
     db.commit()
     db.refresh(user)
@@ -213,8 +231,6 @@ def lti_launch(
                 <hr>
                 <h2>User Information:</h2>
                 <ul>
-                    <li><strong>Name:</strong> {name or 'Not provided'}</li>
-                    <li><strong>Email:</strong> {email or 'Not provided'}</li>
                     <li><strong>Platform:</strong> {platform.name}</li>
                     <li><strong>User ID:</strong> {lti_user_id}</li>
                 </ul>
