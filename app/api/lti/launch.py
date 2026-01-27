@@ -222,23 +222,69 @@ def lti_launch(
     db.commit()
     db.refresh(user)
     
-    return HTMLResponse(f"""
-        <html>
-            <head><title>LTI Launch Successful</title></head>
-            <body style="font-family: Arial; max-width: 800px; margin: 50px auto; padding: 20px;">
-                <h1>✅ Welcome to LTI Lab Platform!</h1>
-                <p>Successfully authenticated via LTI 1.3</p>
-                <hr>
-                <h2>User Information:</h2>
-                <ul>
-                    <li><strong>Platform:</strong> {platform.name}</li>
-                    <li><strong>User ID:</strong> {lti_user_id}</li>
-                </ul>
-                <hr>
-                <h3>Course Context:</h3>
-                <pre>{json.dumps(payload.get('https://purl.imsglobal.org/spec/lti/claim/context', {}), indent=2)}</pre>
-                <h3>Assignment:</h3>
-                <pre>{json.dumps(payload.get('https://purl.imsglobal.org/spec/lti/claim/resource_link', {}), indent=2)}</pre>
-            </body>
-        </html>
-    """)
+    # Extract course and assignment info
+    course_context = payload.get('https://purl.imsglobal.org/spec/lti/claim/context', {})
+    resource_link = payload.get('https://purl.imsglobal.org/spec/lti/claim/resource_link', {})
+
+    # Success page
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>LTI Launch Successful</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        </head>
+        <body>
+            <div class="container px-4 py-5 my-5 text-center">
+                <h1 class="display-5 fw-bold">✅ Welcome to LTI Lab Platform!</h1>
+                <p class="lead mb-4">Successfully authenticated via LTI 1.3</p>
+                
+                <div class="text-start border p-3 rounded bg-light mb-3">
+                    <h2>User Information:</h2>
+                    <ul>
+                        <li><strong>Name:</strong> {name}</li>
+                        <li><strong>Email:</strong> {email}</li>
+                        <li><strong>Platform:</strong> {platform_name}</li>
+                        <li><strong>User ID:</strong> {user_id}</li>
+                    </ul>
+                </div>
+                
+                <div class="text-start border p-3 rounded bg-light mb-3">
+                    <h2>Course Context:</h2>
+                    <ul>
+                        <li><strong>Course Title:</strong> {course_title}</li>
+                        <li><strong>Course ID:</strong> {course_id}</li>
+                        <li><strong>Course Label:</strong> {course_label}</li>
+                    </ul>
+                </div>
+                
+                <div class="text-start border p-3 rounded bg-light">
+                    <h2>Assignment:</h2>
+                    <ul>
+                        <li><strong>Resource Link ID:</strong> {resource_id}</li>
+                    </ul>
+                </div>
+            </div>
+        </body>
+    </html>
+    """.format(
+        name=name or 'Not provided',
+        email=email or 'Not provided',
+        platform_name=platform.name,
+        user_id=lti_user_id,
+        course_title=course_context.get('title', 'Not provided'),
+        course_id=course_context.get('id', 'Not provided'),
+        course_label=course_context.get('label', 'Not provided'),
+        resource_id=resource_link.get('id', 'Not provided')
+    )
+
+    return HTMLResponse(
+        content=html_content,
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+    )
