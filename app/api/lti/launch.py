@@ -244,8 +244,6 @@ def lti_launch(
                 <div class="text-start border p-3 rounded bg-light mb-3">
                     <h2>User Information:</h2>
                     <ul>
-                        <li><strong>Name:</strong> {name}</li>
-                        <li><strong>Email:</strong> {email}</li>
                         <li><strong>Platform:</strong> {platform_name}</li>
                         <li><strong>User ID:</strong> {user_id}</li>
                     </ul>
